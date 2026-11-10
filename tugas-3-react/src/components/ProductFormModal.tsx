@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Product } from '../types/product';
+import type { Product } from '../types/product';
 import { CloseIcon } from './Icons';
 
 interface ProductFormModalProps {
@@ -18,24 +18,13 @@ export function ProductFormModal({
   onClose,
   onSubmit,
 }: ProductFormModalProps) {
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState<string>('');
+  const isEdit = mode === 'edit';
+  const [name, setName] = useState(isEdit && product ? product.name : '');
+  const [price, setPrice] = useState<string>(
+    isEdit && product ? product.price.toString() : '',
+  );
   const [errorName, setErrorName] = useState<string | null>(null);
   const [errorPrice, setErrorPrice] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      if (mode === 'edit' && product) {
-        setName(product.name);
-        setPrice(product.price.toString());
-      } else {
-        setName('');
-        setPrice('');
-      }
-      setErrorName(null);
-      setErrorPrice(null);
-    }
-  }, [isOpen, mode, product]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -53,7 +42,6 @@ export function ProductFormModal({
 
   if (!isOpen) return null;
 
-  const isEdit = mode === 'edit';
   const title = isEdit ? 'Edit Produk' : 'Tambah Produk';
   const subtitle = isEdit
     ? 'Perbarui informasi produk yang dipilih.'

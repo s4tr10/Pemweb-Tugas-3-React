@@ -1,4 +1,4 @@
-import { Product } from '../types/product';
+import type { Product } from '../types/product';
 
 export const INITIAL_PRODUCTS: Product[] = [
   { id: 1, name: 'Pulpen', price: 5000 },

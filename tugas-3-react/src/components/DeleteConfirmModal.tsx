@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Product } from '../types/product';
+import type { Product } from '../types/product';
 import { formatRupiah } from '../utils/formatCurrency';
 import { CloseIcon, TrashIcon } from './Icons';
 
