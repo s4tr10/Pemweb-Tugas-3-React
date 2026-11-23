@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Product } from '../types/product';
+import { Button } from './atoms/Button';
 import { CloseIcon } from './Icons';
 
 interface ProductFormModalProps {
@@ -61,7 +62,7 @@ export function ProductFormModal({
     }
 
     const parsedPrice = Number(price);
-    if (!price || isNaN(parsedPrice) || parsedPrice <= 0) {
+    if (!price || Number.isNaN(parsedPrice) || parsedPrice <= 0) {
       setErrorPrice('Harga harus lebih dari 0.');
       hasError = true;
     } else {
@@ -77,38 +78,59 @@ export function ProductFormModal({
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px]"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="product-modal-title"
+    >
+      <div
+        className="animate-modal-enter w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-start justify-between gap-3">
           <div>
-            <h2 className="modal-title">{title}</h2>
-            <p className="modal-subtitle">{subtitle}</p>
+            <h2
+              id="product-modal-title"
+              className="text-lg font-bold text-slate-900"
+            >
+              {title}
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
           </div>
           <button
             type="button"
-            className="modal-close-btn"
+            className="cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
             onClick={onClose}
             aria-label="Tutup modal"
           >
-            <CloseIcon className="icon-sm" />
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-form">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {isEdit && product && (
-            <div className="form-info-id">
-              <span>ID: {product.id}</span>
+            <div className="inline-block rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+              ID: {product.id}
             </div>
           )}
 
-          <div className="form-group">
-            <label htmlFor="product-name" className="form-label">
+          <div>
+            <label
+              htmlFor="product-name"
+              className="mb-1.5 block text-xs font-semibold text-slate-800"
+            >
               Nama Produk
             </label>
             <input
               id="product-name"
               type="text"
-              className={`form-input ${errorName ? 'input-error' : ''}`}
+              className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-all focus:outline-none focus:ring-2 ${
+                errorName
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                  : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500/20'
+              }`}
               placeholder="Contoh: Pulpen"
               value={name}
               onChange={(e) => {
@@ -117,11 +139,18 @@ export function ProductFormModal({
               }}
               autoFocus
             />
-            {errorName && <p className="form-error-text">{errorName}</p>}
+            {errorName && (
+              <p className="mt-1.5 text-xs font-medium text-red-600">
+                {errorName}
+              </p>
+            )}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="product-price" className="form-label">
+          <div>
+            <label
+              htmlFor="product-price"
+              className="mb-1.5 block text-xs font-semibold text-slate-800"
+            >
               Harga (Rp)
             </label>
             <input
@@ -129,7 +158,11 @@ export function ProductFormModal({
               type="number"
               min="1"
               step="1"
-              className={`form-input ${errorPrice ? 'input-error' : ''}`}
+              className={`w-full rounded-lg border bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-all focus:outline-none focus:ring-2 ${
+                errorPrice
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                  : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500/20'
+              }`}
               placeholder="Contoh: 5000"
               value={price}
               onChange={(e) => {
@@ -137,22 +170,22 @@ export function ProductFormModal({
                 if (errorPrice) setErrorPrice(null);
               }}
             />
-            <p className={`form-help-text ${errorPrice ? 'form-error-text' : ''}`}>
+            <p
+              className={`mt-1.5 text-xs ${
+                errorPrice ? 'font-medium text-red-600' : 'text-slate-400'
+              }`}
+            >
               Harga harus lebih dari 0.
             </p>
           </div>
 
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={onClose}
-            >
+          <div className="flex items-center justify-end gap-2.5 pt-2">
+            <Button variant="secondary" onClick={onClose}>
               Batal
-            </button>
-            <button type="submit" className="btn btn-primary">
+            </Button>
+            <Button type="submit" variant="primary">
               {submitText}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

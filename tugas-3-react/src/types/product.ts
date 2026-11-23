@@ -10,3 +10,5 @@ export interface ProductFormData {
 }
 
 export type ModalType = 'create' | 'edit' | 'delete' | null;
+
+export type ViewMode = 'grid' | 'list';
