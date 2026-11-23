@@ -1,133 +1,107 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Route, Routes } from 'react-router';
 import { INITIAL_PRODUCTS } from './data/initialProducts';
-import type { Product, ModalType } from './types/product';
-import { Header } from './components/Header';
-import { SearchBar } from './components/SearchBar';
-import { ProductList } from './components/ProductList';
-import { FooterSummary } from './components/FooterSummary';
-import { ProductFormModal } from './components/ProductFormModal';
-import { DeleteConfirmModal } from './components/DeleteConfirmModal';
-import './App.css';
+import { AppLayout } from './layouts/AppLayout';
+import { DashboardPage } from './pages/DashboardPage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { ProductDetailPage } from './pages/ProductDetailPage';
+import { ProductsPage } from './pages/ProductsPage';
+import { SettingsPage } from './pages/SettingsPage';
+import type { Product, ViewMode } from './types/product';
+import {
+  loadProducts,
+  loadViewMode,
+  saveProducts,
+  saveViewMode,
+} from './utils/storage';
 
 export default function App() {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [modalType, setModalType] = useState<ModalType>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>(loadProducts);
+  const [viewMode, setViewMode] = useState<ViewMode>(loadViewMode);
 
-  const filteredProducts = useMemo(() => {
-    const trimmed = searchTerm.trim().toLowerCase();
-    if (!trimmed) return products;
-    return products.filter((product) =>
-      product.name.toLowerCase().includes(trimmed),
-    );
-  }, [products, searchTerm]);
+  useEffect(() => {
+    saveProducts(products);
+  }, [products]);
 
-  function handleOpenCreate() {
-    setSelectedProduct(null);
-    setModalType('create');
+  useEffect(() => {
+    saveViewMode(viewMode);
+  }, [viewMode]);
+
+  function handleCreateProduct(data: { name: string; price: number }) {
+    setProducts((prev) => {
+      const nextId =
+        prev.length > 0 ? Math.max(...prev.map((item) => item.id)) + 1 : 1;
+      const newProduct: Product = {
+        id: nextId,
+        name: data.name,
+        price: data.price,
+      };
+      return [...prev, newProduct];
+    });
   }
 
-  function handleOpenEdit(product: Product) {
-    setSelectedProduct(product);
-    setModalType('edit');
-  }
-
-  function handleOpenDelete(product: Product) {
-    setSelectedProduct(product);
-    setModalType('delete');
-  }
-
-  function handleCloseModal() {
-    setModalType(null);
-    setSelectedProduct(null);
-  }
-
-  function handleSaveProduct(data: { name: string; price: number }) {
-    if (modalType === 'edit' && selectedProduct) {
-      setProducts((prev) =>
-        prev.map((item) =>
-          item.id === selectedProduct.id
-            ? { ...item, name: data.name, price: data.price }
-            : item,
-        ),
-      );
-    } else if (modalType === 'create') {
-      setProducts((prev) => {
-        const nextId =
-          prev.length > 0 ? Math.max(...prev.map((p) => p.id)) + 1 : 1;
-        const newProduct: Product = {
-          id: nextId,
-          name: data.name,
-          price: data.price,
-        };
-        return [...prev, newProduct];
-      });
-    }
-
-    handleCloseModal();
-  }
-
-  function handleConfirmDelete() {
-    if (!selectedProduct) return;
-
+  function handleUpdateProduct(
+    id: number,
+    data: { name: string; price: number },
+  ) {
     setProducts((prev) =>
-      prev.filter((item) => item.id !== selectedProduct.id),
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, name: data.name, price: data.price }
+          : item,
+      ),
     );
-    handleCloseModal();
+  }
+
+  function handleDeleteProduct(id: number) {
+    setProducts((prev) => prev.filter((item) => item.id !== id));
+  }
+
+  function handleResetProducts() {
+    setProducts(INITIAL_PRODUCTS);
   }
 
   return (
-    <div className="app-container">
-      <Header onAddProduct={handleOpenCreate} />
-
-      <SearchBar
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        totalCount={filteredProducts.length}
-      />
-
-      <main>
-        <ProductList
-          products={filteredProducts}
-          onEdit={handleOpenEdit}
-          onDelete={handleOpenDelete}
+    <Routes>
+      <Route path="/" element={<AppLayout />}>
+        <Route
+          index
+          element={<DashboardPage products={products} viewMode={viewMode} />}
         />
-      </main>
-
-      <FooterSummary
-        displayedCount={filteredProducts.length}
-        totalCount={products.length}
-      />
-
-      {modalType === 'create' && (
-        <ProductFormModal
-          key="modal-create"
-          isOpen={true}
-          mode="create"
-          product={null}
-          onClose={handleCloseModal}
-          onSubmit={handleSaveProduct}
+        <Route
+          path="products"
+          element={
+            <ProductsPage
+              products={products}
+              viewMode={viewMode}
+              onCreateProduct={handleCreateProduct}
+              onUpdateProduct={handleUpdateProduct}
+              onDeleteProduct={handleDeleteProduct}
+            />
+          }
         />
-      )}
-
-      {modalType === 'edit' && selectedProduct && (
-        <ProductFormModal
-          key={`modal-edit-${selectedProduct.id}`}
-          isOpen={true}
-          mode="edit"
-          product={selectedProduct}
-          onClose={handleCloseModal}
-          onSubmit={handleSaveProduct}
+        <Route
+          path="products/:id"
+          element={
+            <ProductDetailPage
+              products={products}
+              onUpdateProduct={handleUpdateProduct}
+              onDeleteProduct={handleDeleteProduct}
+            />
+          }
         />
-      )}
-
-      <DeleteConfirmModal
-        isOpen={modalType === 'delete'}
-        product={selectedProduct}
-        onClose={handleCloseModal}
-        onConfirm={handleConfirmDelete}
-      />
-    </div>
+        <Route
+          path="settings"
+          element={
+            <SettingsPage
+              viewMode={viewMode}
+              onChangeViewMode={setViewMode}
+              onResetProducts={handleResetProducts}
+            />
+          }
+        />
+      </Route>
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
